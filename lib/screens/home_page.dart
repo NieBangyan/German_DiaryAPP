@@ -32,28 +32,101 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
+  void _openDiaryEditor(DateTime date) {
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final selectedDate = DateTime(date.year, date.month, date.day);
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
+    final existingDiary = StorageService.getDiary(dateStr);
+
+    if (selectedDate.isAfter(todayDate)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You cannot write a diary for a future date.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (selectedDate.isBefore(todayDate)) {
+      _openDiaryViewer(date, existingDiary?.content ?? 'Empty');
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DiaryEditor(
+          date: date,
+          existingContent: existingDiary?.content ?? '',
+        ),
+      ),
+    ).then((_) {
+      _refreshCalendar();
+    });
+  }
+
+  void _openDiaryViewer(DateTime date, String content) {
+    final isEmpty = content == 'Empty';
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('📖 ${DateFormat('yyyy-MM-dd').format(date)}'),
+        content: Container(
+          width: double.maxFinite,
+          constraints: const BoxConstraints(maxHeight: 400),
+          child: SingleChildScrollView(
+            child: isEmpty
+                ? const Center(
+                    child: Text(
+                      '📭 Empty',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  )
+                : Text(
+                    content,
+                    style: const TextStyle(fontSize: 16, height: 1.6),
+                  ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('📝 German Diary'),
+        title: const Text('📓 German Diary'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // calendar
           TableCalendar(
             firstDay: DateTime(2024, 1, 1),
             lastDay: DateTime(2030, 12, 31),
             focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day), 
+            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+            startingDayOfWeek: StartingDayOfWeek.monday,
             onDaySelected: (selected, focused) {
               setState(() {
                 _selectedDay = selected;
                 _focusedDay = focused;
               });
-              // Open diary editor after tapping the date
               _openDiaryEditor(selected);
             },
             calendarStyle: const CalendarStyle(
@@ -66,7 +139,6 @@ class _HomePageState extends State<HomePage> {
                 shape: BoxShape.circle,
               ),
             ),
-           // Mark checked dates
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, events) {
                 final dateStr = DateFormat('yyyy-MM-dd').format(date);
@@ -88,22 +160,28 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 16),
-          // Today's status prompt
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '📝 ${DateFormat('yyyy/MM/dd').format(_selectedDay)}',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  '📝 ${DateFormat('yyyy-MM-dd').format(_selectedDay)}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
-                  _checkedDates.containsKey(DateFormat('yyyy-MM-dd').format(_selectedDay))
-                      ? '✅ Checked'
-                      : '⭕ Unchecked',
+                  _checkedDates.containsKey(
+                    DateFormat('yyyy-MM-dd').format(_selectedDay),
+                  )
+                      ? '✅ Checked in'
+                      : '⭕ Not checked in',
                   style: TextStyle(
-                    color: _checkedDates.containsKey(DateFormat('yyyy-MM-dd').format(_selectedDay))
+                    color: _checkedDates.containsKey(
+                      DateFormat('yyyy-MM-dd').format(_selectedDay),
+                    )
                         ? Colors.green
                         : Colors.grey,
                     fontWeight: FontWeight.bold,
@@ -122,76 +200,4 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  void _openDiaryEditor(DateTime date) {
-  final today = DateTime.now();
-  final todayDate = DateTime(today.year, today.month, today.day);
-  final selectedDate = DateTime(date.year, date.month, date.day);
-  final dateStr = DateFormat('yyyy-MM-dd').format(date);
-  final existingDiary = StorageService.getDiary(dateStr);
-
- 
-  if (selectedDate.isAfter(todayDate)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('You cannot write a diary for a future date.'),
-        backgroundColor: Colors.orange,
-      ),
-    );
-    return;
-  }
-
- 
-  if (selectedDate.isBefore(todayDate)) {
-    if (existingDiary != null) {
-    
-      _openDiaryViewer(date, existingDiary.content);
-    } else {
-    
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You cannot write a diary for a past date.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-    }
-    return;
-  }
-
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => DiaryEditor(
-        date: date,
-        existingContent: existingDiary?.content ?? '',
-      ),
-    ),
-  ).then((_) {
-    _refreshCalendar();
-  });
-}
-
-void _openDiaryViewer(DateTime date, String content) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('📖 ${DateFormat('yyyy-MM-dd').format(date)}'),
-      content: Container(
-        width: double.maxFinite,
-        constraints: const BoxConstraints(maxHeight: 400),
-        child: SingleChildScrollView(
-          child: Text(
-            content,
-            style: const TextStyle(fontSize: 16, height: 1.6),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
-        ),
-      ],
-    ),
-  );
 }
