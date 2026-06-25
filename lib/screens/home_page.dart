@@ -124,20 +124,74 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _openDiaryEditor(DateTime date) {
-    final dateStr = DateFormat('yyyy-MM-dd').format(date);
-    final existingDiary = StorageService.getDiary(dateStr);
+  final today = DateTime.now();
+  final todayDate = DateTime(today.year, today.month, today.day);
+  final selectedDate = DateTime(date.year, date.month, date.day);
+  final dateStr = DateFormat('yyyy-MM-dd').format(date);
+  final existingDiary = StorageService.getDiary(dateStr);
+
+ 
+  if (selectedDate.isAfter(todayDate)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('You cannot write a diary for a future date.'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+    return;
+  }
+
+ 
+  if (selectedDate.isBefore(todayDate)) {
+    if (existingDiary != null) {
     
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DiaryEditor(
-          date: date,
-          existingContent: existingDiary?.content ?? '',
+      _openDiaryViewer(date, existingDiary.content);
+    } else {
+    
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You cannot write a diary for a past date.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+    return;
+  }
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => DiaryEditor(
+        date: date,
+        existingContent: existingDiary?.content ?? '',
+      ),
+    ),
+  ).then((_) {
+    _refreshCalendar();
+  });
+}
+
+void _openDiaryViewer(DateTime date, String content) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('📖 ${DateFormat('yyyy-MM-dd').format(date)}'),
+      content: Container(
+        width: double.maxFinite,
+        constraints: const BoxConstraints(maxHeight: 400),
+        child: SingleChildScrollView(
+          child: Text(
+            content,
+            style: const TextStyle(fontSize: 16, height: 1.6),
+          ),
         ),
       ),
-    ).then((_) {
-      // Refresh calendar on return
-      _refreshCalendar();
-    });
-  }
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
+    ),
+  );
 }
