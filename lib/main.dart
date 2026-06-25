@@ -5,7 +5,16 @@ import 'services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await StorageService.init();  // Initialize local storage
+
+  print('📦 Initializing Storage...');
+  try {
+    await StorageService.init();
+    print('✅ Storage initialized successfully');
+  } catch (e, stacktrace) {
+    print('❌ Storage init failed: $e');
+    print('📚 Stacktrace: $stacktrace');
+  }
+
   runApp(const MyApp());
 }
 

@@ -103,8 +103,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  // 构建日期单元格的通用方法，避免重复代码
   Widget _buildDayCell(DateTime date, bool isSelected, bool isToday) {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);
     final isChecked = _checkedDates.containsKey(dateStr);
@@ -114,14 +112,12 @@ class _HomePageState extends State<HomePage> {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        // 已打卡：绘制绿色边框
         border: isChecked
             ? Border.all(
                 color: Colors.green,
                 width: 2.5,
               )
             : null,
-        // 背景颜色
         color: isSelected
             ? Colors.blue
             : isToday && !isSelected
@@ -168,7 +164,6 @@ class _HomePageState extends State<HomePage> {
               _openDiaryEditor(selected);
             },
             calendarStyle: const CalendarStyle(
-              // 这些样式会被完全覆盖，设置为默认即可
               defaultDecoration: BoxDecoration(
                 color: Colors.transparent,
               ),
@@ -179,28 +174,25 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.transparent,
               ),
             ),
-            // 核心：分别构建三种状态的日期
+          
             calendarBuilders: CalendarBuilders(
-              // 普通日期
+             
               defaultBuilder: (context, date, _) {
                 final isToday = isSameDay(date, DateTime.now());
-                // 如果是今天，但今天可能也被选中，但今天由 todayBuilder 处理，
-                // 所以这里只处理“既不是今天，也不是选中”的普通日期
+                
                 if (!isToday && !isSameDay(date, _selectedDay)) {
                   return _buildDayCell(date, false, false);
                 }
-                // 否则返回 null，让 other builder 处理
                 return null;
               },
-              // 今天（但未被选中）
+             
               todayBuilder: (context, date, _) {
-                // 如果今天也被选中，则让 selectedBuilder 处理
+                
                 if (isSameDay(date, _selectedDay)) {
                   return null;
                 }
                 return _buildDayCell(date, false, true);
               },
-              // 选中的日期（包括今天）
               selectedBuilder: (context, date, _) {
                 return _buildDayCell(date, true, isSameDay(date, DateTime.now()));
               },

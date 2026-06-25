@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../services/storage_service.dart';
+import '../services/ai_service.dart';
 
 class DiaryEditor extends StatefulWidget {
   final DateTime date;
@@ -18,6 +20,7 @@ class DiaryEditor extends StatefulWidget {
 
 class _DiaryEditorState extends State<DiaryEditor> {
   late TextEditingController _controller;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -31,6 +34,101 @@ class _DiaryEditorState extends State<DiaryEditor> {
     super.dispose();
   }
 
+  Future<void> _getAICorrection() async {
+    final content = _controller.text.trim();
+    if (content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please write something before asking AI to correct.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final aiService = AIService();
+      final result = await aiService.correctDiary(content);
+
+      if (!mounted) return;
+
+      if (result.success && result.content != null) {
+        _showCorrectionDialog(result.content!);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${result.error ?? "Unknown error"}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showCorrectionDialog(String correction) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.auto_awesome, color: Colors.green),
+            SizedBox(width: 8),
+            Text('AI Correction'),
+          ],
+        ),
+        content: Container(
+          width: double.maxFinite,
+          constraints: const BoxConstraints(maxHeight: 500),
+          child: SingleChildScrollView(
+            child: MarkdownBody(
+              data: correction,
+              styleSheet: MarkdownStyleSheet(
+                body: const TextStyle(fontSize: 15, height: 1.8),
+                p: const TextStyle(fontSize: 15, height: 1.8),
+                listBullet: const TextStyle(fontSize: 15),
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _saveAndClose() {
+    if (_controller.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please write something before saving')),
+      );
+      return;
+    }
+    final dateStr = DateFormat('yyyy-MM-dd').format(widget.date);
+    StorageService.saveDiary(dateStr, _controller.text.trim());
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,6 +137,20 @@ class _DiaryEditorState extends State<DiaryEditor> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            onPressed: _isLoading ? null : _getAICorrection,
+            icon: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.auto_awesome),
+            tooltip: 'AI Correction',
+          ),
           IconButton(
             onPressed: _saveAndClose,
             icon: const Icon(Icons.save),
@@ -84,36 +196,48 @@ class _DiaryEditorState extends State<DiaryEditor> {
               ),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _saveAndClose,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _saveAndClose,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('💾 Save Diary'),
                   ),
                 ),
-                child: const Text('💾 Save Diary'),
-              ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _getAICorrection,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(Icons.auto_awesome),
+                  label: const Text('AI Correct'),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
-  }
-
-  void _saveAndClose() {
-    if (_controller.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please write something before saving')),
-      );
-      return;
-    }
-    final dateStr = DateFormat('yyyy-MM-dd').format(widget.date);
-    StorageService.saveDiary(dateStr, _controller.text.trim());
-    Navigator.pop(context);
   }
 }
