@@ -100,9 +100,9 @@ class _DiaryEditorState extends State<DiaryEditor> {
             child: MarkdownBody(
               data: correction,
               styleSheet: MarkdownStyleSheet(
-                body: const TextStyle(fontSize: 15, height: 1.8),
                 p: const TextStyle(fontSize: 15, height: 1.8),
                 listBullet: const TextStyle(fontSize: 15),
+                strong: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ),

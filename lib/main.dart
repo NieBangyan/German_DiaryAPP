@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/home_page.dart';
 import 'services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  print('📦 Initializing Storage...');
+  // 从 assets 加载 .env
   try {
-    await StorageService.init();
-    print('✅ Storage initialized successfully');
-  } catch (e, stacktrace) {
-    print('❌ Storage init failed: $e');
-    print('📚 Stacktrace: $stacktrace');
+    await dotenv.load(fileName: 'assets/.env');
+    print('✅ .env loaded from assets');
+  } catch (e) {
+    print('⚠️ .env not found in assets: $e');
   }
 
+  await StorageService.init();
   runApp(const MyApp());
 }
 

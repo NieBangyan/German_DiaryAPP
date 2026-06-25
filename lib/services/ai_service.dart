@@ -1,14 +1,27 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AIService {
   static const String _baseUrl = 'https://api.deepseek.com/v1/chat/completions';
-  
-  // 你的 API Key
-  static const String _apiKey = 'sk-e03e06ae435842d5afeb7462cf960d54';
+  late final String _apiKey;
+
+  AIService() {
+    _apiKey = dotenv.env['DEEPSEEK_API_KEY'] ?? '';
+    if (_apiKey.isEmpty) {
+      print('⚠️ Warning: DEEPSEEK_API_KEY not found in .env file');
+    }
+  }
 
   final Dio _dio = Dio();
 
   Future<AIResult> correctDiary(String diaryContent) async {
+    if (_apiKey.isEmpty) {
+      return AIResult(
+        success: false,
+        error: 'API Key not configured. Please check .env file.',
+      );
+    }
+
     try {
       final response = await _dio.post(
         _baseUrl,
@@ -29,11 +42,16 @@ You are a German teacher. Correct the user's German diary entry.
 Respond in English. Keep it brief and clear with this format:
 
 **Original:** [show the incorrect sentence]
+
 **Correction:** [show the corrected version]
+
 **Why:** [short explanation of the error]
 
-If there are multiple errors, list them as bullet points.
-Keep the response short and focused.
+if the sentence is correct,don't need to provide response,dont list the original sentence,dont need to do any thing.
+Rules:
+1. output the corrected version of the full diary entry.
+2. Keep the same sentence structure, just fix grammar, spelling, and word order.
+
 ''',
             },
             {
@@ -41,8 +59,8 @@ Keep the response short and focused.
               'content': diaryContent,
             },
           ],
-          'temperature': 0.7,
-          'max_tokens': 1000,
+          'temperature': 0.3,
+          'max_tokens': 500,
         },
       );
 
