@@ -21,6 +21,7 @@ class DiaryEditor extends StatefulWidget {
 class _DiaryEditorState extends State<DiaryEditor> {
   late TextEditingController _controller;
   bool _isLoading = false;
+  String _aiResult = '';  // new state variable to hold AI result
 
   @override
   void initState() {
@@ -47,6 +48,7 @@ class _DiaryEditorState extends State<DiaryEditor> {
 
     setState(() {
       _isLoading = true;
+      _aiResult = '';  // clear previous AI result
     });
 
     try {
@@ -56,23 +58,19 @@ class _DiaryEditorState extends State<DiaryEditor> {
       if (!mounted) return;
 
       if (result.success && result.content != null) {
-        _showCorrectionDialog(result.content!);
+        setState(() {
+          _aiResult = result.content!;
+        });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${result.error ?? "Unknown error"}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _aiResult = '❌ Error: ${result.error ?? "Unknown error"}';
+        });
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() {
+        _aiResult = '❌ Error: $e';
+      });
     } finally {
       if (mounted) {
         setState(() {
@@ -80,41 +78,6 @@ class _DiaryEditorState extends State<DiaryEditor> {
         });
       }
     }
-  }
-
-  void _showCorrectionDialog(String correction) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.auto_awesome, color: Colors.green),
-            SizedBox(width: 8),
-            Text('AI Correction'),
-          ],
-        ),
-        content: Container(
-          width: double.maxFinite,
-          constraints: const BoxConstraints(maxHeight: 500),
-          child: SingleChildScrollView(
-            child: MarkdownBody(
-              data: correction,
-              styleSheet: MarkdownStyleSheet(
-                p: const TextStyle(fontSize: 15, height: 1.8),
-                listBullet: const TextStyle(fontSize: 15),
-                strong: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _saveAndClose() {
@@ -157,86 +120,143 @@ class _DiaryEditorState extends State<DiaryEditor> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '✍️ Write your German diary entry for today',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  controller: _controller,
-                  maxLines: null,
-                  expands: true,
-                  textAlign: TextAlign.start,
-                  textAlignVertical: TextAlignVertical.top,
-                  decoration: const InputDecoration(
-                    hintText: 'Heute habe ich...',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(16),
+      body: Column(
+        children: [
+      
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '✍️ Write your German diary entry for today',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
                   ),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.6,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _saveAndClose,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      child: TextField(
+                        controller: _controller,
+                        maxLines: null,
+                        expands: true,
+                        textAlign: TextAlign.start,
+                        textAlignVertical: TextAlignVertical.top,
+                        decoration: const InputDecoration(
+                          hintText: 'Heute habe ich...',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.all(16),
+                        ),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          height: 1.6,
+                        ),
+                      ),
                     ),
-                    child: const Text('💾 Save Diary'),
                   ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _getAICorrection,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _saveAndClose,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                        )
-                      : const Icon(Icons.auto_awesome),
-                  label: const Text('AI Correct'),
-                ),
-              ],
+                          child: const Text('💾 Save Diary'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _isLoading ? null : _getAICorrection,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: _isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.auto_awesome),
+                          label: const Text('AI Correct'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              border: Border(
+                top: BorderSide(color: Colors.grey.shade300),
+              ),
+            ),
+            child: _isLoading
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 12),
+                        Text('🤖 AI is thinking...'),
+                      ],
+                    ),
+                  )
+                : _aiResult.isEmpty
+                    ? const Center(
+                        child: Text(
+                          '🤖 Click "AI Correct" to get corrections',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: SingleChildScrollView(
+                          child: MarkdownBody(
+                            data: _aiResult,
+                            styleSheet: MarkdownStyleSheet(
+                              p: const TextStyle(fontSize: 14, height: 1.6),
+                              listBullet: const TextStyle(fontSize: 14),
+                              strong: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+          ),
+        ],
       ),
     );
   }

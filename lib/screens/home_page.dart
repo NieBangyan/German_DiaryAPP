@@ -103,6 +103,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
   Widget _buildDayCell(DateTime date, bool isSelected, bool isToday) {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);
     final isChecked = _checkedDates.containsKey(dateStr);
@@ -142,9 +143,27 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('📓 German Diary'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Text(
+              '📓 German Diary',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(width: 8),
+            Text(
+              '     ✨ keep going',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -174,20 +193,15 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.transparent,
               ),
             ),
-          
             calendarBuilders: CalendarBuilders(
-             
               defaultBuilder: (context, date, _) {
                 final isToday = isSameDay(date, DateTime.now());
-                
                 if (!isToday && !isSameDay(date, _selectedDay)) {
                   return _buildDayCell(date, false, false);
                 }
                 return null;
               },
-             
               todayBuilder: (context, date, _) {
-                
                 if (isSameDay(date, _selectedDay)) {
                   return null;
                 }
@@ -235,6 +249,8 @@ class _HomePageState extends State<HomePage> {
         onPressed: () {
           _openDiaryEditor(DateTime.now());
         },
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
         child: const Icon(Icons.edit),
       ),
     );

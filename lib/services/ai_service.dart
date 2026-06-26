@@ -41,13 +41,6 @@ You are a German teacher. Correct the user's German diary entry.
 
 Respond in English. Keep it brief and clear with this format:
 
-**Original:** [show the incorrect sentence]
-
-**Correction:** [show the corrected version]
-
-**Why:** [short explanation of the error]
-
-if the sentence is correct,don't need to provide response,dont list the original sentence,dont need to do any thing.
 Rules:
 1. output the corrected version of the full diary entry.
 2. Keep the same sentence structure, just fix grammar, spelling, and word order.
@@ -57,7 +50,9 @@ but if the sentence ig wrong ,u need to list it like this
 **Correction:** [show the corrected version]
 
 **Why:** [short explanation of the error,like Distinguish part-of-speech, word order and inflection errors, and pinpoint German-specific grammatical mistakes.]
+and number the sentences before each correction. If the sentence is correct, don't provide a response, don't list the original sentence, and don't do anything.
 
+and show the corrected version of the full diary entry at the end of the response, and make sure to keep the same sentence structure, just fix grammar, spelling, and word order.
 ''',
             },
             {
