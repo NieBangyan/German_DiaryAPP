@@ -87,7 +87,7 @@ class _DiaryEditorState extends State<DiaryEditor> {
       );
       return;
     }
-    final dateStr = DateFormat('yyyy-MM-dd').format(widget.date);
+    final dateStr = DateFormat('yyyy/MM/dd').format(widget.date);
     StorageService.saveDiary(dateStr, _controller.text.trim());
     Navigator.pop(context);
   }
@@ -96,7 +96,7 @@ class _DiaryEditorState extends State<DiaryEditor> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('📝 ${DateFormat('yyyy-MM-dd').format(widget.date)}'),
+        title: Text('📝 ${DateFormat('yyyy/MM/dd').format(widget.date)}'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         actions: [
@@ -249,7 +249,7 @@ class _DiaryEditorState extends State<DiaryEditor> {
                               listBullet: const TextStyle(fontSize: 14),
                               strong: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green,
+                                color: Colors.grey,
                               ),
                             ),
                           ),

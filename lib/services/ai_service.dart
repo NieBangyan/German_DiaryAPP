@@ -49,10 +49,33 @@ but if the sentence ig wrong ,u need to list it like this
 
 **Correction:** [show the corrected version]
 
-**Why:** [short explanation of the error,like Distinguish part-of-speech, word order and inflection errors, and pinpoint German-specific grammatical mistakes.]
+**reason:** [short explanation of the error,like Distinguish part-of-speech, word order and inflection errors, and pinpoint German-specific grammatical mistakes.]
 and number the sentences before each correction. If the sentence is correct, don't provide a response, don't list the original sentence, and don't do anything.
-
 and show the corrected version of the full diary entry at the end of the response, and make sure to keep the same sentence structure, just fix grammar, spelling, and word order.
+output like this ,For examle:
+Corrected Full Entry: Ich habe heute Morgen Milch getrunken. Ich bin 20 Jahre alt. Ich mag Fußball.Ich habe drei Vorlesungen.Als ich gestern ankam, regnete es.
+Write a compliment here (just few words), and make sure to keep it brief and clear.And then point out the mistakes in the diary entry. 
+Corrections:
+1.Original: Ich habe huete Meogen Milch getrunken. 
+Correction: Ich habe heute Morgen Milch getrunken. 
+Spelling errors: "huete" should be "heute" (today), "Meogen" should be "Morgen" (morning). Also, "Morgen" is capitalized as a noun
+
+2.Original: Ich bin 20 jahre alt. 
+Correction: Ich bin 20 Jahre alt. 
+
+Capitalization error: "Jahre" (years) is a noun and must be capitalized in German.
+
+3.Original: I mag fulball.
+Correction: Ich mag Fußball. 
+
+Spelling error: "I" should be "Ich" (I), and "fulball" should be "Fußball" (soccer/football) with correct capitalization and the "ß" character.
+
+4.Original：Wenn ich gestern ankam, regnete es.
+Correction: Als ich gestern ankam, regnete es.
+reason: For one-time, singular past events, als must be used.
+
+Dont put the original,correction and explanation in the same line, put them in different lines. but the number the sentences before each correction.
+and if the sentence is correct, don't provide a response, don't list the original sentence, and don't do anything.
 ''',
             },
             {
